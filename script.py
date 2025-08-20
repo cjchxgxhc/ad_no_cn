@@ -1,5 +1,38 @@
 import urllib.request
 
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, domain):
+        node = self.root
+        # Reverse domain parts for suffix matching (e.g., example.com -> com.example)
+        parts = domain.split('.')[::-1]
+        for part in parts:
+            if part not in node.children:
+                node.children[part] = TrieNode()
+            node = node.children[part]
+        node.is_end = True
+
+    def is_subdomain_or_exact(self, domain):
+        # Check if domain or its parent domains exist in Trie
+        parts = domain.split('.')[::-1]
+        node = self.root
+        for i, part in enumerate(parts):
+            if part not in node.children:
+                return False
+            node = node.children[part]
+            if node.is_end:
+                # If we hit an end node, check if this is exact match or subdomain
+                if i + 1 == len(parts) or all(node.children.get(parts[j], None) is None for j in range(i + 1, len(parts))):
+                    return True
+        return node.is_end
+
 def fetch_and_filter():
     # Fetch ad blocklist
     ad_url = 'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.mini-onlydomains.txt'
@@ -19,29 +52,27 @@ def fetch_and_filter():
         print(f"Error fetching CN list: {e}")
         return
 
-    # Process ad domains into a set for fast lookup and removal
+    # Process ad domains into a set
     ad_domains = set()
     for line in ad_data.splitlines():
         line = line.strip().lower()
         if line and not line.startswith(('#', '!')):
             ad_domains.add(line)
 
-    # Process CN domains into a set
+    # Build Trie for CN domains
+    trie = Trie()
     cn_domains = set()
     for line in cn_data.splitlines():
         line = line.strip().lower()
         if line and not line.startswith(('#', '!')):
             cn_domains.add(line)
+            trie.insert(line)
 
-    # Filter: remove ad domains that are equal to or subdomains of CN domains
-    to_remove = set()
+    # Filter ad domains
+    filtered_ad = set()
     for ad in ad_domains:
-        for cn in cn_domains:
-            if ad == cn or ad.endswith('.' + cn):
-                to_remove.add(ad)
-                break
-
-    filtered_ad = ad_domains - to_remove
+        if not trie.is_subdomain_or_exact(ad):
+            filtered_ad.add(ad)
 
     # Sort the filtered list for consistent output
     filtered_list = sorted(filtered_ad)
