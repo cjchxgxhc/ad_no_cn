@@ -35,7 +35,7 @@ class Trie:
 
 def fetch_and_filter():
     # Fetch ad blocklist
-    ad_url = 'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro-onlydomains.txt'
+    ad_url = 'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.mini-onlydomains.txt'
     try:
         with urllib.request.urlopen(ad_url) as response:
             ad_data = response.read().decode('utf-8')
