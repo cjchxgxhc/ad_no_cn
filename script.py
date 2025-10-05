@@ -52,11 +52,11 @@ def fetch_and_filter():
 
     # Ad blocklist URLs
     ad_urls = [
-        'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro-onlydomains.txt',
-        'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.mini-onlydomains.txt'
+        ('https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro-onlydomains.txt', 'filtered_pro_domains.txt'),
+        ('https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.mini-onlydomains.txt', 'filtered_pro_mini_domains.txt')
     ]
 
-    for ad_url in ad_urls:
+    for ad_url, output_file in ad_urls:
         # Fetch ad blocklist
         try:
             with urllib.request.urlopen(ad_url) as response:
@@ -82,9 +82,6 @@ def fetch_and_filter():
         filtered_list = sorted(filtered_ad)
 
         # Output to file
-        # Derive filename from URL
-        base_name = ad_url.split('/')[-1].replace('-onlydomains.txt', '_filtered.txt')
-        output_file = f'filtered_{base_name}'
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(filtered_list) + '\n')
 
